@@ -55,7 +55,7 @@ body {
   align-items: center;
   background-color: var(--surface-color);
   border: var(--border-width) solid var(--border-color);
-  border-radius: 50px;
+  border-radius: 20px;
   box-shadow: var(--shadow);
   position: sticky;
   top: 1rem;
