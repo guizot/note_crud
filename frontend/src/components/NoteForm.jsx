@@ -97,7 +97,6 @@ const NoteForm = ({ onSubmit, initialData = null, onCancel, availableTags = [] }
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     className="input-field"
-                    required
                 />
             </div>
 
