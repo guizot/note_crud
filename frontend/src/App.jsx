@@ -210,10 +210,11 @@ function AppContent() {
                         minWidth: 'auto',
                         fontSize: '0.85rem',
                         backgroundColor: currentView === 'active' ? 'var(--primary-accent)' : 'var(--surface-color)',
-                        fontWeight: currentView === 'active' ? '900' : '700'
+                        fontWeight: currentView === 'active' ? '900' : '700',
+                        border: currentView === 'active' ? '4px solid black' : '3px solid black'
                       }}
                     >
-                      ACTIVE
+                      {currentView === 'active' ? '● ' : ''}ACTIVE
                     </button>
                     <button
                       onClick={() => switchView('archived')}
@@ -225,10 +226,11 @@ function AppContent() {
                         minWidth: 'auto',
                         fontSize: '0.85rem',
                         backgroundColor: currentView === 'archived' ? 'var(--primary-accent)' : 'var(--surface-color)',
-                        fontWeight: currentView === 'archived' ? '900' : '700'
+                        fontWeight: currentView === 'archived' ? '900' : '700',
+                        border: currentView === 'archived' ? '4px solid black' : '3px solid black'
                       }}
                     >
-                      ARCHIVED
+                      {currentView === 'archived' ? '● ' : ''}ARCHIVED
                     </button>
                     <button
                       onClick={() => switchView('dashboard')}
@@ -240,10 +242,11 @@ function AppContent() {
                         minWidth: 'auto',
                         fontSize: '0.85rem',
                         backgroundColor: currentView === 'dashboard' ? 'var(--primary-accent)' : 'var(--surface-color)',
-                        fontWeight: currentView === 'dashboard' ? '900' : '700'
+                        fontWeight: currentView === 'dashboard' ? '900' : '700',
+                        border: currentView === 'dashboard' ? '4px solid black' : '3px solid black'
                       }}
                     >
-                      📊 STATS
+                      {currentView === 'dashboard' ? '● ' : ''}STATS
                     </button>
                   </div>
                   {currentView !== 'dashboard' && (

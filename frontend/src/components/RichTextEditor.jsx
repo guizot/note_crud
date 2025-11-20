@@ -45,7 +45,8 @@ const RichTextEditor = ({ value, onChange, placeholder }) => {
                 padding: '0.75rem',
                 display: 'flex',
                 gap: '0.5rem',
-                flexWrap: 'wrap'
+                flexWrap: 'wrap',
+                boxShadow: '5px 5px 0px 0px black'
             }}>
                 <button
                     type="button"
