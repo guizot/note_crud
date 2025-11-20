@@ -32,12 +32,20 @@ const formatTimeAgo = (dateString) => {
 
 const NoteList = ({ notes, onEdit, onDelete, onPin, onRestore, onPermanentDelete, showArchived = false }) => {
     const [numColumns, setNumColumns] = useState(3);
+    const [gap, setGap] = useState('2rem');
 
     useEffect(() => {
         const handleResize = () => {
-            if (window.innerWidth < 640) setNumColumns(1);
-            else if (window.innerWidth < 1024) setNumColumns(2);
-            else setNumColumns(3);
+            if (window.innerWidth < 640) {
+                setNumColumns(1);
+                setGap('1rem');
+            } else if (window.innerWidth < 1024) {
+                setNumColumns(2);
+                setGap('1.5rem');
+            } else {
+                setNumColumns(3);
+                setGap('2rem');
+            }
         };
 
         // Initial check
@@ -72,7 +80,7 @@ const NoteList = ({ notes, onEdit, onDelete, onPin, onRestore, onPermanentDelete
     return (
         <div style={{
             display: 'flex',
-            gap: '2rem',
+            gap: gap,
             alignItems: 'flex-start'
         }}>
             {columns.map((colNotes, colIndex) => (
@@ -80,7 +88,7 @@ const NoteList = ({ notes, onEdit, onDelete, onPin, onRestore, onPermanentDelete
                     flex: 1,
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '2rem',
+                    gap: gap,
                     minWidth: 0 // Prevents flex items from overflowing
                 }}>
                     {colNotes.map((note) => (

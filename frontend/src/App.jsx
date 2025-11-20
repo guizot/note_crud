@@ -21,6 +21,7 @@ function AppContent() {
   const [deleteId, setDeleteId] = useState(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isSortDialogOpen, setIsSortDialogOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     loadNotes();
@@ -100,40 +101,49 @@ function AppContent() {
     setSearchQuery('');
   };
 
-  // Filter by active/archived status first
-  const viewFilteredNotes = notes.filter(note =>
-    currentView === 'archived' ? note.is_archived === 1 : note.is_archived === 0
-  );
+  const sortedNotes = notes
+    .filter(note => {
+      // Filter by view (active vs archived)
+      if (currentView === 'active') {
+        if (note.is_archived) return false;
+      } else if (currentView === 'archived') {
+        if (!note.is_archived) return false;
+      }
+      // Dashboard view doesn't show note list, so filtering doesn't matter as much for the list
+      // but we might want to hide the list entirely in the render
 
-  const filteredNotes = viewFilteredNotes.filter(note =>
-    note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    note.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (note.category && note.category.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
-
-  const sortedNotes = [...filteredNotes].sort((a, b) => {
-    // Always sort pinned notes to the top first (only for active view)
-    if (currentView === 'active') {
+      // Filter by search query
+      if (!searchQuery) return true;
+      const query = searchQuery.toLowerCase();
+      return (
+        note.title.toLowerCase().includes(query) ||
+        note.content.toLowerCase().includes(query) ||
+        (note.category && note.category.toLowerCase().includes(query)) ||
+        (note.tags && note.tags.some(tag => tag.name.toLowerCase().includes(query)))
+      );
+    })
+    .sort((a, b) => {
+      // First sort by pinned status (pinned first)
       if (a.pinned && !b.pinned) return -1;
       if (!a.pinned && b.pinned) return 1;
-    }
 
-    const dateA = new Date(a.created_at.endsWith('Z') ? a.created_at : a.created_at + 'Z');
-    const dateB = new Date(b.created_at.endsWith('Z') ? b.created_at : b.created_at + 'Z');
+      // Then sort by selected criteria
+      const dateA = new Date(a.created_at);
+      const dateB = new Date(b.created_at);
 
-    switch (sortBy) {
-      case 'date-desc':
-        return dateB - dateA;
-      case 'date-asc':
-        return dateA - dateB;
-      case 'title-asc':
-        return a.title.localeCompare(b.title);
-      case 'title-desc':
-        return b.title.localeCompare(a.title);
-      default:
-        return dateB - dateA;
-    }
-  });
+      switch (sortBy) {
+        case 'date-asc':
+          return dateA - dateB;
+        case 'date-desc':
+          return dateB - dateA;
+        case 'title-asc':
+          return a.title.localeCompare(b.title);
+        case 'title-desc':
+          return b.title.localeCompare(a.title);
+        default:
+          return dateB - dateA;
+      }
+    });
 
   const isOnHomePage = location.pathname === '/';
   const isOnNewPage = location.pathname === '/new';
@@ -148,8 +158,8 @@ function AppContent() {
   return (
     <div className="app-container">
       <header className="main-header">
-        <h1 className="header-title">{getHeaderTitle()}</h1>
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+        <div className="header-content">
+          <h1 className="header-title">{getHeaderTitle()}</h1>
           {!isOnHomePage && (
             <button
               onClick={() => navigate('/')}
@@ -158,146 +168,150 @@ function AppContent() {
                 height: '40px',
                 padding: '0 1rem',
                 borderRadius: '20px',
+                fontSize: '0.85rem'
+              }}
+            >
+              BACK
+            </button>
+          )}
+        </div>
+
+        {isOnHomePage && !searchExpanded && (
+          <>
+            <div className="header-tabs">
+              <button
+                onClick={() => switchView('active')}
+                className="btn"
+                style={{
+                  height: '40px',
+                  padding: '0 1rem',
+                  borderRadius: '20px',
+                  minWidth: 'auto',
+                  fontSize: '0.85rem',
+                  backgroundColor: currentView === 'active' ? 'var(--primary-accent)' : 'var(--surface-color)',
+                  fontWeight: currentView === 'active' ? '900' : '700',
+                  border: currentView === 'active' ? '4px solid black' : '3px solid black'
+                }}
+              >
+                {currentView === 'active' ? '● ' : ''}ACTIVE
+              </button>
+              <button
+                onClick={() => switchView('archived')}
+                className="btn"
+                style={{
+                  height: '40px',
+                  padding: '0 1rem',
+                  borderRadius: '20px',
+                  minWidth: 'auto',
+                  fontSize: '0.85rem',
+                  backgroundColor: currentView === 'archived' ? 'var(--primary-accent)' : 'var(--surface-color)',
+                  fontWeight: currentView === 'archived' ? '900' : '700',
+                  border: currentView === 'archived' ? '4px solid black' : '3px solid black'
+                }}
+              >
+                {currentView === 'archived' ? '● ' : ''}ARCHIVED
+              </button>
+              <button
+                onClick={() => switchView('dashboard')}
+                className="btn"
+                style={{
+                  height: '40px',
+                  padding: '0 1rem',
+                  borderRadius: '20px',
+                  minWidth: 'auto',
+                  fontSize: '0.85rem',
+                  backgroundColor: currentView === 'dashboard' ? 'var(--primary-accent)' : 'var(--surface-color)',
+                  fontWeight: currentView === 'dashboard' ? '900' : '700',
+                  border: currentView === 'dashboard' ? '4px solid black' : '3px solid black'
+                }}
+              >
+                {currentView === 'dashboard' ? '● ' : ''}STATS
+              </button>
+            </div>
+
+            {currentView !== 'dashboard' && (
+              <div className="header-actions">
+                <button
+                  onClick={() => setIsSortDialogOpen(true)}
+                  className="btn"
+                  style={{
+                    height: '40px',
+                    padding: '0 1rem',
+                    borderRadius: '20px',
+                    minWidth: 'auto',
+                    fontSize: '0.85rem'
+                  }}
+                >
+                  SORT
+                </button>
+                <button
+                  onClick={() => setSearchExpanded(true)}
+                  className="btn"
+                  style={{
+                    height: '40px',
+                    padding: '0 1rem',
+                    borderRadius: '20px',
+                    minWidth: 'auto',
+                    fontSize: '1.2rem'
+                  }}
+                  title="Search"
+                >
+                  🔍
+                </button>
+                <button
+                  onClick={() => navigate('/new')}
+                  className="btn btn-primary"
+                  style={{
+                    height: '40px',
+                    padding: '0 1rem',
+                    borderRadius: '20px',
+                    minWidth: 'auto',
+                    fontSize: '0.9rem',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  + NEW NOTE
+                </button>
+              </div>
+            )}
+          </>
+        )}
+
+        {isOnHomePage && searchExpanded && (
+          <div className="search-container" style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            flex: 1
+          }}>
+            <input
+              type="text"
+              placeholder="Search notes..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="search-bar"
+              autoFocus
+              style={{ flex: 1, height: '40px', marginBottom: 0 }}
+            />
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setSearchExpanded(false);
+              }}
+              className="btn"
+              style={{
+                height: '40px',
+                padding: '0 1rem',
+                borderRadius: '20px',
                 minWidth: 'auto',
                 fontSize: '1.1rem'
               }}
-              title="Back to home"
+              title="Close search"
             >
-              ← BACK
+              ✕
             </button>
-          )}
-          {isOnHomePage && (
-            <>
-              {searchExpanded ? (
-                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flex: 1 }}>
-                  <input
-                    type="text"
-                    placeholder="SEARCH NOTES..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="search-bar"
-                    autoFocus
-                    style={{ flex: 1, height: '40px' }}
-                  />
-                  <button
-                    onClick={() => {
-                      setSearchQuery('');
-                      setSearchExpanded(false);
-                    }}
-                    className="btn"
-                    style={{
-                      height: '40px',
-                      padding: '0 1rem',
-                      borderRadius: '20px',
-                      minWidth: 'auto',
-                      fontSize: '1.1rem'
-                    }}
-                    title="Close search"
-                  >
-                    ✕
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <div style={{ display: 'flex', gap: '0.75rem' }}>
-                    <button
-                      onClick={() => switchView('active')}
-                      className="btn"
-                      style={{
-                        height: '40px',
-                        padding: '0 1rem',
-                        borderRadius: '20px',
-                        minWidth: 'auto',
-                        fontSize: '0.85rem',
-                        backgroundColor: currentView === 'active' ? 'var(--primary-accent)' : 'var(--surface-color)',
-                        fontWeight: currentView === 'active' ? '900' : '700',
-                        border: currentView === 'active' ? '4px solid black' : '3px solid black'
-                      }}
-                    >
-                      {currentView === 'active' ? '● ' : ''}ACTIVE
-                    </button>
-                    <button
-                      onClick={() => switchView('archived')}
-                      className="btn"
-                      style={{
-                        height: '40px',
-                        padding: '0 1rem',
-                        borderRadius: '20px',
-                        minWidth: 'auto',
-                        fontSize: '0.85rem',
-                        backgroundColor: currentView === 'archived' ? 'var(--primary-accent)' : 'var(--surface-color)',
-                        fontWeight: currentView === 'archived' ? '900' : '700',
-                        border: currentView === 'archived' ? '4px solid black' : '3px solid black'
-                      }}
-                    >
-                      {currentView === 'archived' ? '● ' : ''}ARCHIVED
-                    </button>
-                    <button
-                      onClick={() => switchView('dashboard')}
-                      className="btn"
-                      style={{
-                        height: '40px',
-                        padding: '0 1rem',
-                        borderRadius: '20px',
-                        minWidth: 'auto',
-                        fontSize: '0.85rem',
-                        backgroundColor: currentView === 'dashboard' ? 'var(--primary-accent)' : 'var(--surface-color)',
-                        fontWeight: currentView === 'dashboard' ? '900' : '700',
-                        border: currentView === 'dashboard' ? '4px solid black' : '3px solid black'
-                      }}
-                    >
-                      {currentView === 'dashboard' ? '● ' : ''}STATS
-                    </button>
-                  </div>
-                  {currentView !== 'dashboard' && (
-                    <>
-                      <button
-                        onClick={() => setIsSortDialogOpen(true)}
-                        className="btn"
-                        style={{
-                          height: '40px',
-                          padding: '0 1rem',
-                          borderRadius: '20px',
-                          minWidth: 'auto',
-                          fontSize: '0.85rem'
-                        }}
-                      >
-                        SORT
-                      </button>
-                      <button
-                        onClick={() => setSearchExpanded(true)}
-                        className="btn"
-                        style={{
-                          height: '40px',
-                          padding: '0 1rem',
-                          borderRadius: '20px',
-                          minWidth: 'auto',
-                          fontSize: '1.1rem'
-                        }}
-                        title="Search notes"
-                      >
-                        🔍
-                      </button>
-                    </>
-                  )}
-                  <button
-                    onClick={() => navigate('/new')}
-                    className="btn btn-primary"
-                    style={{
-                      height: '40px',
-                      padding: '0 1rem',
-                      borderRadius: '20px',
-                      minWidth: 'auto',
-                      fontSize: '0.85rem'
-                    }}
-                  >
-                    ➕ NEW NOTE
-                  </button>
-                </>
-              )}
-            </>
-          )}
-        </div>
+          </div>
+        )}
       </header>
 
       {error && (

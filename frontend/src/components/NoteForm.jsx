@@ -58,7 +58,7 @@ const NoteForm = ({ onSubmit, initialData = null, onCancel, availableTags = [] }
     };
 
     return (
-        <form onSubmit={handleSubmit} className="card" style={{ padding: '2rem' }}>
+        <form onSubmit={handleSubmit} className="card">
             <div style={{ marginBottom: '1.5rem' }}>
                 <label style={{
                     display: 'block',
